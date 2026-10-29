@@ -1,13 +1,15 @@
+"""Testes unitários da classe NegociacaoAnalytics."""
+
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
+import pytest
 
 from app.analytics.negociacao_analytics import NegociacaoAnalytics
 from app.enums.status_negociacao import StatusNegociacao
 from app.enums.tipo_negociacao import TipoNegociacao
 from app.models.negociacao import Negociacao
-
-
 
 
 def criar_negociacoes():
@@ -107,22 +109,37 @@ def criar_negociacoes_nao_finalizadas():
         )
     ]
 
-def test_deve_analisar_negociacoes():
-    analytics = NegociacaoAnalytics()
+@pytest.fixture
+def analytics():
+    """Disponibiliza uma instância da classe de análise."""
+    return NegociacaoAnalytics()
+
+
+@pytest.fixture
+def negociacoes():
+    """Disponibiliza negociações para os testes de análise."""
+    return criar_negociacoes()
+
+
+@pytest.fixture
+def negociacoes_nao_finalizadas():
+    """Disponibiliza negociações sem finalização."""
+    return criar_negociacoes_nao_finalizadas()
+
+def test_deve_analisar_negociacoes(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     assert resultado is not None
     assert resultado["geral"]["totalNegociacoes"] == 6
 
 
-def test_deve_calcular_negociacoes_por_tipo():
-    analytics = NegociacaoAnalytics()
+def test_deve_calcular_negociacoes_por_tipo(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     analise_por_tipo = resultado["porTipo"]
@@ -139,11 +156,10 @@ def test_deve_calcular_negociacoes_por_tipo():
     assert venda["totalNegociacoes"] == 3
 
 
-def test_deve_calcular_taxa_finalizacao_por_tipo():
-    analytics = NegociacaoAnalytics()
+def test_deve_calcular_taxa_finalizacao_por_tipo(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     analise_por_tipo = resultado["porTipo"]
@@ -162,11 +178,10 @@ def test_deve_calcular_taxa_finalizacao_por_tipo():
     assert troca["taxaFinalizacao"] == 2 / 3
     assert venda["taxaFinalizacao"] == 2 / 3
 
-def test_deve_calcular_negociacoes_por_categoria():
-    analytics = NegociacaoAnalytics()
+def test_deve_calcular_negociacoes_por_categoria(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     analise_por_categoria = resultado["porCategoria"]
@@ -203,11 +218,10 @@ def test_deve_calcular_negociacoes_por_categoria():
     assert romance["totalFinalizadas"] == 1
     assert romance["taxaFinalizacao"] == 1
 
-def test_deve_analisar_afinidade_das_categorias():
-    analytics = NegociacaoAnalytics()
+def test_deve_analisar_afinidade_das_categorias(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     analise_afinidade = resultado["afinidadeCategorias"]
@@ -237,11 +251,10 @@ def test_deve_analisar_afinidade_das_categorias():
     assert diferente["taxaFinalizacao"] == 1
 
 
-def test_deve_analisar_combinacoes_de_categorias():
-    analytics = NegociacaoAnalytics()
+def test_deve_analisar_combinacoes_de_categorias(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     analise_combinacoes = resultado["combinacoesCategorias"]
@@ -282,11 +295,10 @@ def test_deve_analisar_combinacoes_de_categorias():
     assert tecnologia_romance["totalFinalizadas"] == 1
     assert tecnologia_romance["taxaFinalizacao"] == 1
 
-def test_deve_analisar_negociacoes_por_mes():
-    analytics = NegociacaoAnalytics()
+def test_deve_analisar_negociacoes_por_mes(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     negociacoes_por_mes = resultado["temporal"]["negociacoesPorMes"]
@@ -307,11 +319,10 @@ def test_deve_analisar_negociacoes_por_mes():
     assert setembro["quantidade"] == 2
     assert outubro["quantidade"] == 2
 
-def test_deve_analisar_finalizacoes_por_mes():
-    analytics = NegociacaoAnalytics()
+def test_deve_analisar_finalizacoes_por_mes(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     finalizacoes_por_mes = resultado["temporal"]["finalizacoesPorMes"]
@@ -333,11 +344,10 @@ def test_deve_analisar_finalizacoes_por_mes():
     assert outubro["quantidade"] == 1
 
 
-def test_deve_calcular_tempo_medio_finalizacao():
-    analytics = NegociacaoAnalytics()
+def test_deve_calcular_tempo_medio_finalizacao(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     tempo_finalizacao = resultado["temporal"]["tempoFinalizacao"]
@@ -357,11 +367,10 @@ def test_deve_calcular_tempo_medio_finalizacao():
     assert venda["tempoMedioDias"] == 3.5
 
 
-def test_deve_calcular_taxa_finalizacao_por_mes_inicio():
-    analytics = NegociacaoAnalytics()
+def test_deve_calcular_taxa_finalizacao_por_mes_inicio(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     taxa_por_mes = resultado["temporal"]["taxaFinalizacaoPorMesInicio"]
@@ -391,11 +400,10 @@ def test_deve_calcular_taxa_finalizacao_por_mes_inicio():
     assert outubro["taxaFinalizacao"] == 0.5
 
 
-def test_deve_ajustar_taxa_finalizacao_por_categoria():
-    analytics = NegociacaoAnalytics()
+def test_deve_ajustar_taxa_finalizacao_por_categoria(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     analise_por_categoria = resultado["porCategoria"]
@@ -408,11 +416,10 @@ def test_deve_ajustar_taxa_finalizacao_por_categoria():
         & (analise_por_categoria["taxaFinalizacaoAjustada"] <= 1)
     ).all()
 
-def test_deve_ajustar_taxa_finalizacao_por_combinacao():
-    analytics = NegociacaoAnalytics()
+def test_deve_ajustar_taxa_finalizacao_por_combinacao(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     analise_combinacoes = resultado["combinacoesCategorias"]
@@ -426,11 +433,10 @@ def test_deve_ajustar_taxa_finalizacao_por_combinacao():
     ).all()
 
 
-def test_deve_gerar_insights():
-    analytics = NegociacaoAnalytics()
+def test_deve_gerar_insights(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     insights = resultado["insights"]
@@ -439,11 +445,10 @@ def test_deve_gerar_insights():
     assert len(insights) > 0
 
 
-def test_deve_gerar_insight_por_tipo_negociacao():
-    analytics = NegociacaoAnalytics()
+def test_deve_gerar_insight_por_tipo_negociacao(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     insights = resultado["insights"]
@@ -460,11 +465,10 @@ def test_deve_gerar_insight_por_tipo_negociacao():
     assert insight_tipo is not None
 
 
-def test_deve_gerar_tipos_de_insights_esperados():
-    analytics = NegociacaoAnalytics()
+def test_deve_gerar_tipos_de_insights_esperados(analytics, negociacoes):
 
     resultado = analytics.analisar(
-        criar_negociacoes()
+        negociacoes
     )
 
     tipos_insights = {
@@ -483,8 +487,7 @@ def test_deve_gerar_tipos_de_insights_esperados():
 
     assert tipos_esperados.issubset(tipos_insights)
 
-def test_deve_aceitar_lista_de_negociacoes_vazia():
-    analytics = NegociacaoAnalytics()
+def test_deve_aceitar_lista_de_negociacoes_vazia(analytics):
 
     resultado = analytics.analisar([])
 
@@ -492,11 +495,10 @@ def test_deve_aceitar_lista_de_negociacoes_vazia():
     assert resultado["geral"]["totalNegociacoes"] == 0
     assert resultado["insights"] == []
 
-def test_deve_aceitar_negociacoes_sem_finalizacoes():
-    analytics = NegociacaoAnalytics()
+def test_deve_aceitar_negociacoes_sem_finalizacoes(analytics, negociacoes_nao_finalizadas):
 
     resultado = analytics.analisar(
-        criar_negociacoes_nao_finalizadas()
+        negociacoes_nao_finalizadas
     )
 
     assert resultado["geral"]["totalNegociacoes"] == 2
@@ -508,8 +510,7 @@ def test_deve_aceitar_negociacoes_sem_finalizacoes():
 
     assert resultado["temporal"]["tempoFinalizacao"].empty
 
-def test_deve_aceitar_negociacoes_sem_categorias():
-    analytics = NegociacaoAnalytics()
+def test_deve_aceitar_negociacoes_sem_categorias(analytics):
 
     negociacao = Negociacao(
         id="N9",
@@ -527,8 +528,7 @@ def test_deve_aceitar_negociacoes_sem_categorias():
 
     assert resultado["geral"]["totalNegociacoes"] == 1
 
-def test_deve_analisar_negociacoes_com_categorias_parcialmente_ausentes():
-    analytics = NegociacaoAnalytics()
+def test_deve_analisar_negociacoes_com_categorias_parcialmente_ausentes(analytics):
 
     negociacao_valida = Negociacao(
         id="N10",
@@ -561,8 +561,7 @@ def test_deve_analisar_negociacoes_com_categorias_parcialmente_ausentes():
 
     assert resultado["geral"]["totalNegociacoes"] == 2
 
-def test_deve_analisar_negociacoes_com_datas_de_finalizacao_mistas():
-    analytics = NegociacaoAnalytics()
+def test_deve_analisar_negociacoes_com_datas_de_finalizacao_mistas(analytics):
 
     negociacao_finalizada = Negociacao(
         id="N12",
@@ -595,8 +594,7 @@ def test_deve_analisar_negociacoes_com_datas_de_finalizacao_mistas():
 
     assert resultado["geral"]["totalNegociacoes"] == 2
 
-def test_deve_analisar_negociacoes_em_meses_diferentes():
-    analytics = NegociacaoAnalytics()
+def test_deve_analisar_negociacoes_em_meses_diferentes(analytics):
 
     negociacoes = [
         Negociacao(
@@ -628,8 +626,7 @@ def test_deve_analisar_negociacoes_em_meses_diferentes():
     assert resultado["geral"]["totalNegociacoes"] == 2
     assert len(resultado["temporal"]["negociacoesPorMes"]) == 2
 
-def test_deve_ignorar_afinidade_quando_nao_ha_anuncio_oferecido():
-    analytics = NegociacaoAnalytics()
+def test_deve_ignorar_afinidade_quando_nao_ha_anuncio_oferecido(analytics):
 
     negociacao = Negociacao(
         id="N16",
@@ -648,8 +645,7 @@ def test_deve_ignorar_afinidade_quando_nao_ha_anuncio_oferecido():
     assert resultado["geral"]["totalNegociacoes"] == 1
     assert resultado["afinidadeCategorias"].empty
 
-def test_deve_analisar_negociacao_com_multiplas_categorias():
-    analytics = NegociacaoAnalytics()
+def test_deve_analisar_negociacao_com_multiplas_categorias(analytics):
 
     negociacao = Negociacao(
         id="N17",
@@ -671,8 +667,7 @@ def test_deve_analisar_negociacao_com_multiplas_categorias():
 
     assert set(categorias) == {"Fantasia", "Aventura", "Ficção"}
 
-def test_deve_evitar_duplicidade_de_categoria_na_mesma_negociacao():
-    analytics = NegociacaoAnalytics()
+def test_deve_evitar_duplicidade_de_categoria_na_mesma_negociacao(analytics):
 
     negociacao = Negociacao(
         id="N18",
@@ -697,8 +692,7 @@ def test_deve_evitar_duplicidade_de_categoria_na_mesma_negociacao():
     assert fantasia.iloc[0]["totalNegociacoes"] == 1
 
 
-def test_deve_tratar_data_de_finalizacao_anterior_a_negociacao():
-    analytics = NegociacaoAnalytics()
+def test_deve_tratar_data_de_finalizacao_anterior_a_negociacao(analytics):
 
     negociacao = Negociacao(
         id="N19",
@@ -722,8 +716,7 @@ def test_deve_tratar_data_de_finalizacao_anterior_a_negociacao():
     )
 
 
-def test_deve_ignorar_finalizacao_sem_data_finalizacao():
-    analytics = NegociacaoAnalytics()
+def test_deve_ignorar_finalizacao_sem_data_finalizacao(analytics):
 
     negociacao = Negociacao(
         id="N20",
@@ -746,8 +739,7 @@ def test_deve_ignorar_finalizacao_sem_data_finalizacao():
         or (tempo_medio["tempoMedioDias"] >= 0).all()
     )
 
-def test_deve_calcular_tempo_medio_ignorando_datas_invalidas():
-    analytics = NegociacaoAnalytics()
+def test_deve_calcular_tempo_medio_ignorando_datas_invalidas(analytics):
 
     negociacao_valida = Negociacao(
         id="N22",
@@ -783,8 +775,7 @@ def test_deve_calcular_tempo_medio_ignorando_datas_invalidas():
     assert not tempo_finalizacao.empty
     assert tempo_finalizacao["tempoMedioDias"].iloc[0] == 3.0
 
-def test_deve_calcular_tempo_medio_separadamente_por_tipo():
-    analytics = NegociacaoAnalytics()
+def test_deve_calcular_tempo_medio_separadamente_por_tipo(analytics):
 
     venda = Negociacao(
         id="N24",
@@ -818,8 +809,7 @@ def test_deve_calcular_tempo_medio_separadamente_por_tipo():
     assert tempos[TipoNegociacao.VENDA.value] == 2.0
     assert tempos[TipoNegociacao.TROCA.value] == 5.0
 
-def test_deve_ignorar_data_finalizacao_de_negociacao_nao_finalizada():
-    analytics = NegociacaoAnalytics()
+def test_deve_ignorar_data_finalizacao_de_negociacao_nao_finalizada(analytics):
 
     negociacao = Negociacao(
         id="N26",
@@ -838,11 +828,8 @@ def test_deve_ignorar_data_finalizacao_de_negociacao_nao_finalizada():
 
     assert tempo_finalizacao.empty
 
-def test_deve_rejeitar_estimativa_com_menos_de_dois_grupos():
-    import pandas as pd
-    import pytest
+def test_deve_rejeitar_estimativa_com_menos_de_dois_grupos(analytics):
 
-    analytics = NegociacaoAnalytics()
 
     indicadores = pd.DataFrame([
         {
@@ -858,13 +845,9 @@ def test_deve_rejeitar_estimativa_com_menos_de_dois_grupos():
         analytics._estimar_parametros_beta_binomial(indicadores)
 
 
-def test_deve_lancar_erro_quando_otimizacao_beta_binomial_falhar(monkeypatch):
+def test_deve_lancar_erro_quando_otimizacao_beta_binomial_falhar(monkeypatch, analytics):
     from types import SimpleNamespace
-    import pandas as pd
-    import pytest
     import app.analytics.negociacao_analytics as modulo_analytics
-
-    analytics = NegociacaoAnalytics()
 
     indicadores = pd.DataFrame([
         {"totalFinalizadas": 1, "totalNegociacoes": 2},
@@ -883,10 +866,8 @@ def test_deve_lancar_erro_quando_otimizacao_beta_binomial_falhar(monkeypatch):
         analytics._estimar_parametros_beta_binomial(indicadores)
 
 
-def test_deve_gerar_insight_quando_taxas_de_troca_e_venda_fore_m_iguais():
-    import pandas as pd
+def test_deve_gerar_insight_quando_taxas_de_troca_e_venda_forem_iguais(analytics):
 
-    analytics = NegociacaoAnalytics()
 
     analise_por_tipo = pd.DataFrame([
         {
@@ -913,11 +894,9 @@ def test_deve_gerar_insight_quando_taxas_de_troca_e_venda_fore_m_iguais():
     assert insight["dados"]["taxaFinalizacaoVenda"] == 0.5
     assert insight["dados"]["diferencaTaxaFinalizacao"] == 0.0
 
-def test_deve_destacar_troca_quando_tiver_maior_taxa_de_finalizacao():
-    import numpy as np
-    import pandas as pd
+def test_deve_destacar_troca_quando_tiver_maior_taxa_de_finalizacao(analytics):
 
-    analytics = NegociacaoAnalytics()
+
 
     analise_por_tipo = pd.DataFrame([
         {
@@ -944,11 +923,9 @@ def test_deve_destacar_troca_quando_tiver_maior_taxa_de_finalizacao():
     assert np.isclose(insight["dados"]["taxaFinalizacaoVenda"], 0.5)
     assert np.isclose(insight["dados"]["diferencaTaxaFinalizacao"], 0.3)
 
-def test_deve_destacar_venda_quando_tiver_maior_taxa_de_finalizacao():
-    import numpy as np
-    import pandas as pd
+def test_deve_destacar_venda_quando_tiver_maior_taxa_de_finalizacao(analytics):
 
-    analytics = NegociacaoAnalytics()
+
 
     analise_por_tipo = pd.DataFrame([
         {
@@ -975,10 +952,8 @@ def test_deve_destacar_venda_quando_tiver_maior_taxa_de_finalizacao():
     assert np.isclose(insight["dados"]["taxaFinalizacaoVenda"], 0.8)
     assert np.isclose(insight["dados"]["diferencaTaxaFinalizacao"], 0.3)
 
-def test_deve_retornar_none_quando_houver_apenas_um_tipo_de_negociacao():
-    import pandas as pd
+def test_deve_retornar_none_quando_houver_apenas_um_tipo_de_negociacao(analytics):
 
-    analytics = NegociacaoAnalytics()
 
     analise_por_tipo = pd.DataFrame([
         {
@@ -995,10 +970,8 @@ def test_deve_retornar_none_quando_houver_apenas_um_tipo_de_negociacao():
 
     assert insight is None
 
-def test_deve_identificar_empate_no_tempo_medio_de_finalizacao():
-    import pandas as pd
+def test_deve_identificar_empate_no_tempo_medio_de_finalizacao(analytics):
 
-    analytics = NegociacaoAnalytics()
 
     analise_tempo_finalizacao = pd.DataFrame([
         {
@@ -1020,10 +993,8 @@ def test_deve_identificar_empate_no_tempo_medio_de_finalizacao():
     assert insight is not None
     assert insight["dados"]["modalidadeMaisRapida"] == "EMPATE"
 
-def test_deve_identificar_estabilidade_na_evolucao_temporal():
-    import pandas as pd
+def test_deve_identificar_estabilidade_na_evolucao_temporal(analytics):
 
-    analytics = NegociacaoAnalytics()
 
     negociacoes_por_mes = pd.DataFrame([
         {
@@ -1042,10 +1013,8 @@ def test_deve_identificar_estabilidade_na_evolucao_temporal():
 
     assert insight is not None
 
-def test_deve_tratar_mes_anterior_com_zero_negociacoes():
-    import pandas as pd
+def test_deve_tratar_mes_anterior_com_zero_negociacoes(analytics):
 
-    analytics = NegociacaoAnalytics()
 
     negociacoes_por_mes = pd.DataFrame([
         {
@@ -1064,10 +1033,8 @@ def test_deve_tratar_mes_anterior_com_zero_negociacoes():
 
     assert insight is not None
 
-def test_deve_retornar_none_quando_houver_menos_de_dois_meses():
-    import pandas as pd
+def test_deve_retornar_none_quando_houver_menos_de_dois_meses(analytics):
 
-    analytics = NegociacaoAnalytics()
 
     negociacoes_por_mes = pd.DataFrame([
         {
@@ -1083,10 +1050,8 @@ def test_deve_retornar_none_quando_houver_menos_de_dois_meses():
     assert insight is None
 
 
-def test_deve_retornar_none_quando_houver_apenas_um_nivel_de_afinidade():
-    import pandas as pd
+def test_deve_retornar_none_quando_houver_apenas_um_nivel_de_afinidade(analytics):
 
-    analytics = NegociacaoAnalytics()
 
     analise_afinidade = pd.DataFrame([
         {

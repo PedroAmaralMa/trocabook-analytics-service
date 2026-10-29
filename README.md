@@ -75,6 +75,10 @@ A disponibilização dessa análise por meio da API do serviço permanece condic
 
 O experimento de previsão de usuários utiliza o histórico mensal de criação de usuários para estimar a quantidade de novos usuários em períodos futuros.
 
+A implementação reutilizável está disponível em `app/analytics/previsao_temporal_analytics.py`, por meio da classe `PrevisaoTemporalAnalytics`. Ela recebe uma série mensal e o nome da coluna que contém a métrica, permitindo aplicar a mesma lógica a diferentes indicadores, sem acoplar a classe à origem dos dados.
+
+O módulo prepara e valida a série temporal, completa meses sem registros com zero, avalia uma regressão linear utilizando os períodos finais como conjunto de teste e calcula as métricas MAE e RMSE. Depois, treina o modelo com todo o histórico disponível e gera projeções para os meses futuros.
+
 O experimento contempla:
 
 - construção da série temporal mensal;
@@ -87,6 +91,8 @@ O experimento contempla:
 ### Previsão de novos anúncios
 
 O experimento de previsão de anúncios utiliza o histórico mensal de criação de anúncios para estimar a quantidade de novos anúncios que poderão ser publicados em períodos futuros.
+
+A previsão utiliza a mesma classe `PrevisaoTemporalAnalytics`, informando a coluna correspondente à quantidade de novos anúncios. Assim, usuários e anúncios compartilham a implementação do modelo, alterando apenas a série mensal de entrada.
 
 O experimento contempla:
 
@@ -110,7 +116,8 @@ trocabook-analytics-service/
 │
 ├── app/
 │   ├── analytics/
-│   │   └── negociacao_analytics.py
+│   │   ├── negociacao_analytics.py
+│   │   └── previsao_temporal_analytics.py
 │   │
 │   ├── enums/
 │   │   ├── __init__.py
@@ -133,7 +140,9 @@ trocabook-analytics-service/
 │   └── experimento_previsao_usuarios.ipynb
 │
 ├── tests/
-│   └── test_negociacao_analytics.py
+    ├── __init__.py
+│   ├── test_negociacao_analytics.py
+│   └── test_previsao_temporal_analytics.py
 │
 ├── .gitignore
 ├── requirements.txt
@@ -143,7 +152,7 @@ trocabook-analytics-service/
 
 ### Responsabilidades dos diretórios e arquivos
 
-- `analytics/` — contém os módulos responsáveis pelo processamento, análise e geração de indicadores e insights dos dados da plataforma;
+- `analytics/` — contém os módulos responsáveis pelo processamento, análise e geração de indicadores, insights e previsões temporais dos dados da plataforma;
 - `enums/` — contém as enumerações utilizadas pelos modelos do serviço;
 - `models/` — contém os modelos utilizados para representar os dados recebidos pelo serviço;
 - `notebooks/` — reúne os experimentos de análise de dados e desenvolvimento dos modelos preditivos;
@@ -160,28 +169,20 @@ Os testes automatizados verificam o comportamento das funcionalidades implementa
 
 Atualmente, o módulo de análise de negociações possui uma suíte de testes que contempla cenários comuns, dados ausentes, datas inválidas, diferentes tipos de negociação e situações em que não existem informações suficientes para produzir determinadas análises.
 
+O módulo `PrevisaoTemporalAnalytics` também possui testes automatizados em `tests/test_previsao_temporal_analytics.py`. Os testes verificam a estrutura do retorno, a utilização da mesma implementação para séries de usuários e anúncios, o preenchimento de meses ausentes, a validação dos dados de entrada, o histórico mínimo necessário e a geração de projeções não negativas.
+
+A suíte específica de previsão temporal contém **11 casos de teste implementados**. A execução desses testes será realizada junto à validação das demais funcionalidades.
+
+
+Para executar todos os testes do serviço, utilize:
+```bash
+pytest  -v
+```
 Na execução mais recente:
 
-- **40 testes aprovados**;
+- **64 testes aprovados**;
 - **0 testes com falha**;
-- tempo de execução de aproximadamente 5,25 segundos;
-- cobertura anteriormente registrada de 98% para `app/analytics/negociacao_analytics.py`.
-
-Para executar os testes, utilize:
-
-```bash
-pytest
-```
-
-Para executar os testes com relatório de cobertura do módulo de análise de negociações:
-
-```bash
-pytest --cov=app.analytics.negociacao_analytics --cov-report=term-missing
-```
-
-A cobertura deve ser interpretada considerando o módulo especificado no comando. Os resultados apresentados não representam necessariamente a cobertura total da aplicação.
-
----
+- tempo de execução de aproximadamente 10,65 segundos;
 
 ## Integração com o Trocabook
 
@@ -256,6 +257,8 @@ A utilização de cada tecnologia nas funcionalidades disponibilizadas pelo serv
 - [x] Definição inicial dos modelos utilizados pelo serviço;
 - [x] Implementação inicial das análises de negociações;
 - [x] Implementação dos testes automatizados para as análises de negociações;
+- [x] Implementação inicial do módulo reutilizável de previsão temporal;
+- [x] Criação dos testes automatizados para `PrevisaoTemporalAnalytics`;
 - [x] Execução da suíte de testes de negociações, com 40 testes aprovados.
 
 ### Próximas etapas
