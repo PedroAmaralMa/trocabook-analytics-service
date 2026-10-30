@@ -1,10 +1,10 @@
 # Trocabook — Serviço de Analytics
 
-Serviço de analytics desenvolvido para o **Trocabook**, uma plataforma voltada à troca e venda de livros novos e usados.
+Serviço de Analytics desenvolvido para o **Trocabook**, uma plataforma voltada à troca e venda de livros novos e usados.
 
-Este projeto é responsável pela aplicação de técnicas de **análise e mineração de dados** para extrair informações dos dados da plataforma e gerar indicadores, insights e projeções que auxiliem no acompanhamento da evolução do Trocabook.
+O projeto é responsável pela aplicação de técnicas de **análise e mineração de dados** para extrair informações da plataforma e gerar indicadores, insights e projeções que auxiliem no acompanhamento da evolução do Trocabook e na tomada de decisões.
 
-O serviço é desenvolvido em **Python** e utiliza **FastAPI** como tecnologia prevista para a disponibilização de uma API REST, permitindo a integração com o sistema principal do Trocabook, desenvolvido em **Spring Boot**.
+O serviço é desenvolvido em **Python** e utiliza **Pandas** para o processamento e análise dos dados. A disponibilização por meio de uma API REST utilizando **FastAPI** está prevista para permitir sua integração com o sistema principal do Trocabook, desenvolvido em **Spring Boot**.
 
 ---
 
@@ -14,12 +14,12 @@ O objetivo do serviço é analisar dados relacionados aos usuários, anúncios e
 
 Inicialmente, o serviço contempla quatro frentes:
 
-- análise das negociações realizadas na plataforma;
-- análise dos anúncios publicados;
-- previsão da quantidade de novos usuários;
-- previsão da quantidade de novos anúncios.
+- Análise das negociações realizadas na plataforma;
+- Análise dos anúncios publicados;
+- Previsão da quantidade de novos usuários;
+- Previsão da quantidade de novos anúncios.
 
-As análises e os modelos foram inicialmente desenvolvidos e avaliados de forma experimental utilizando dados simulados. A utilização de dados reais da plataforma será realizada durante a integração do serviço com o sistema principal.
+As análises e os modelos foram inicialmente desenvolvidos e avaliados de forma experimental utilizando dados simulados. A utilização de dados reais da plataforma será realizada durante a integração com o sistema principal.
 
 ---
 
@@ -37,24 +37,20 @@ notebooks/
 
 ### Análise de negociações
 
-O experimento de análise de negociações investiga o comportamento das negociações realizadas na plataforma. Parte dessas análises já foi implementada no módulo `app/analytics/negociacao_analytics.py`.
+O experimento de análise de negociações investiga o comportamento das negociações realizadas na plataforma.
 
 Entre os aspectos analisados estão:
 
-- quantidade e distribuição das negociações;
-- comparação entre modalidades de negociação;
-- análise por categorias;
-- afinidade entre categorias em negociações de troca;
-- evolução temporal das negociações;
-- análise do tempo médio de finalização;
-- estimativas das taxas de finalização;
-- geração de insights a partir dos resultados.
+- Quantidade e distribuição das negociações;
+- Comparação entre modalidades de negociação;
+- Análise por categorias;
+- Afinidade entre categorias em negociações de troca;
+- Evolução temporal das negociações;
+- Análise do tempo médio de finalização;
+- Estimativas das taxas de finalização;
+- Geração de insights a partir dos resultados.
 
-O módulo conta com testes automatizados para verificar os comportamentos esperados das análises, incluindo cenários com dados ausentes, datas inválidas, diferentes modalidades de negociação e condições com informações insuficientes para determinadas estimativas.
-
-Na execução mais recente dos testes, **40 testes foram aprovados**, sem falhas. A cobertura anteriormente registrada para o módulo foi de **98%**.
-
-Esses resultados se referem aos testes automatizados do módulo de análise de negociações e não representam uma validação completa de todo o serviço ou de sua integração com o sistema principal.
+Parte dessas análises está implementada no módulo `app/analytics/negociacao_analytics.py`.
 
 ### Análise de anúncios
 
@@ -62,46 +58,49 @@ O experimento de análise de anúncios investiga o comportamento das publicaçõ
 
 Entre os aspectos analisados estão:
 
-- quantidade de anúncios;
-- distribuição por tipo de negociação;
-- categorias mais anunciadas;
-- relação entre categorias e modalidades de negociação;
-- evolução mensal da quantidade de anúncios;
-- variações no volume de anúncios ao longo do tempo.
+- Quantidade de anúncios;
+- Distribuição por tipo de negociação;
+- Autores e categorias mais anunciados;
+- Relação entre categorias e modalidades de negociação;
+- Evolução mensal da quantidade de anúncios;
+- Variações no volume de anúncios ao longo do tempo;
+- Geração de insights a partir dos resultados.
 
-A disponibilização dessa análise por meio da API do serviço permanece condicionada à implementação e à integração correspondentes.
+A implementação reutilizável está disponível em `app/analytics/anuncio_analytics.py`, por meio da classe `AnuncioAnalytics`.
+
+O módulo recebe os anúncios e realiza o processamento utilizando Pandas, retornando estruturas com indicadores gerais, distribuições, análises temporais e insights.
 
 ### Previsão de novos usuários
 
 O experimento de previsão de usuários utiliza o histórico mensal de criação de usuários para estimar a quantidade de novos usuários em períodos futuros.
 
-A implementação reutilizável está disponível em `app/analytics/previsao_temporal_analytics.py`, por meio da classe `PrevisaoTemporalAnalytics`. Ela recebe uma série mensal e o nome da coluna que contém a métrica, permitindo aplicar a mesma lógica a diferentes indicadores, sem acoplar a classe à origem dos dados.
+A implementação reutilizável está disponível em `app/analytics/previsao_temporal_analytics.py`, por meio da classe `PrevisaoTemporalAnalytics`.
 
 O módulo prepara e valida a série temporal, completa meses sem registros com zero, avalia uma regressão linear utilizando os períodos finais como conjunto de teste e calcula as métricas MAE e RMSE. Depois, treina o modelo com todo o histórico disponível e gera projeções para os meses futuros.
 
 O experimento contempla:
 
-- construção da série temporal mensal;
-- análise da evolução histórica;
-- utilização de um baseline de persistência;
-- utilização experimental de Regressão Linear;
-- avaliação utilizando MAE e RMSE;
-- projeções para horizontes de 1, 3, 6 e 12 meses.
+- Construção da série temporal mensal;
+- Análise da evolução histórica;
+- Utilização de um baseline de persistência;
+- Utilização experimental de Regressão Linear;
+- Avaliação utilizando MAE e RMSE;
+- Projeções para horizontes de 1, 3, 6 e 12 meses.
 
 ### Previsão de novos anúncios
 
 O experimento de previsão de anúncios utiliza o histórico mensal de criação de anúncios para estimar a quantidade de novos anúncios que poderão ser publicados em períodos futuros.
 
-A previsão utiliza a mesma classe `PrevisaoTemporalAnalytics`, informando a coluna correspondente à quantidade de novos anúncios. Assim, usuários e anúncios compartilham a implementação do modelo, alterando apenas a série mensal de entrada.
+A previsão utiliza a mesma classe `PrevisaoTemporalAnalytics`, informando a coluna correspondente à quantidade de novos anúncios. Dessa forma, usuários e anúncios compartilham a implementação do modelo, alterando apenas a série mensal de entrada.
 
 O experimento contempla:
 
-- construção da série temporal mensal;
-- análise da evolução histórica;
-- utilização de um baseline de persistência;
-- utilização experimental de Regressão Linear;
-- avaliação utilizando MAE e RMSE;
-- projeções para horizontes de 1, 3, 6 e 12 meses.
+- Construção da série temporal mensal;
+- Análise da evolução histórica;
+- Utilização de um baseline de persistência;
+- Utilização experimental de Regressão Linear;
+- Avaliação utilizando MAE e RMSE;
+- Projeções para horizontes de 1, 3, 6 e 12 meses.
 
 Os modelos preditivos utilizados nos experimentos representam abordagens iniciais e deverão ser reavaliados com os dados reais da plataforma antes de sua utilização integrada ao sistema principal.
 
@@ -109,13 +108,15 @@ Os modelos preditivos utilizados nos experimentos representam abordagens iniciai
 
 ## Estrutura do Projeto
 
-A estrutura abaixo representa os principais diretórios e arquivos relacionados ao serviço. Ela deverá ser ajustada conforme novas funcionalidades e camadas forem implementadas.
+A estrutura atual do serviço está organizada da seguinte forma:
 
 ```text
 trocabook-analytics-service/
 │
 ├── app/
 │   ├── analytics/
+│   │   ├── __init__.py
+│   │   ├── anuncio_analytics.py
 │   │   ├── negociacao_analytics.py
 │   │   └── previsao_temporal_analytics.py
 │   │
@@ -140,7 +141,8 @@ trocabook-analytics-service/
 │   └── experimento_previsao_usuarios.ipynb
 │
 ├── tests/
-    ├── __init__.py
+│   ├── __init__.py
+│   ├── test_anuncio_analytics.py
 │   ├── test_negociacao_analytics.py
 │   └── test_previsao_temporal_analytics.py
 │
@@ -152,38 +154,85 @@ trocabook-analytics-service/
 
 ### Responsabilidades dos diretórios e arquivos
 
-- `analytics/` — contém os módulos responsáveis pelo processamento, análise e geração de indicadores, insights e previsões temporais dos dados da plataforma;
-- `enums/` — contém as enumerações utilizadas pelos modelos do serviço;
-- `models/` — contém os modelos utilizados para representar os dados recebidos pelo serviço;
+- `analytics/` — contém os módulos responsáveis pelo processamento, análise e geração de indicadores, insights e previsões temporais;
+- `enums/` — contém as enumerações utilizadas para representar valores padronizados, como tipos e status de negociação;
+- `models/` — contém os modelos utilizados para representar e estruturar os dados recebidos pelo serviço;
 - `notebooks/` — reúne os experimentos de análise de dados e desenvolvimento dos modelos preditivos;
-- `tests/` — contém os testes automatizados utilizados para verificar os comportamentos esperados das funcionalidades implementadas;
+- `tests/` — contém os testes automatizados utilizados para verificar os comportamentos esperados dos módulos de análise e previsão;
 - `main.py` — ponto de entrada da aplicação FastAPI.
 
-Novas camadas, como adapters, services e contratos específicos de requisição e resposta, serão adicionadas conforme a arquitetura do serviço evoluir.
-
+A arquitetura poderá receber novas camadas, como adapters, services e controllers, conforme a implementação da API e a integração com o sistema principal evoluírem.
 ---
 
 ## Testes Automatizados
 
-Os testes automatizados verificam o comportamento das funcionalidades implementadas, ajudando a identificar falhas e a preservar os resultados esperados durante futuras alterações no código.
+O serviço utiliza **pytest** para a implementação dos testes automatizados.
 
-Atualmente, o módulo de análise de negociações possui uma suíte de testes que contempla cenários comuns, dados ausentes, datas inválidas, diferentes tipos de negociação e situações em que não existem informações suficientes para produzir determinadas análises.
+Os testes verificam os comportamentos esperados dos módulos de análise e previsão, incluindo cenários comuns, dados incompletos, entradas inválidas e situações em que não existem informações suficientes para determinadas operações.
 
-O módulo `PrevisaoTemporalAnalytics` também possui testes automatizados em `tests/test_previsao_temporal_analytics.py`. Os testes verificam a estrutura do retorno, a utilização da mesma implementação para séries de usuários e anúncios, o preenchimento de meses ausentes, a validação dos dados de entrada, o histórico mínimo necessário e a geração de projeções não negativas.
+### Testes de análise de negociações
 
-A suíte específica de previsão temporal contém **11 casos de teste implementados**. A execução desses testes será realizada junto à validação das demais funcionalidades.
+O módulo `NegociacaoAnalytics` possui uma suíte de testes que contempla:
 
+- Análise geral das negociações;
+- Distribuição por modalidade;
+- Análise por categorias;
+- Afinidade entre categorias em negociações de troca;
+- Evolução temporal das negociações;
+- Análise do tempo médio de finalização;
+- Estimativas das taxas de finalização;
+- Geração de insights;
+- Tratamento de dados ausentes e datas inválidas;
+- Situações com informações insuficientes para determinadas estimativas.
 
-Para executar todos os testes do serviço, utilize:
+Na execução anteriormente registrada, **40 testes foram aprovados**, sem falhas.
+
+### Testes de análise de anúncios
+
+O módulo `AnuncioAnalytics` possui testes automatizados em `tests/test_anuncio_analytics.py`.
+
+Os testes verificam:
+
+- Execução geral da análise dos anúncios;
+- Cálculo dos indicadores gerais;
+- Distribuição por tipo de negociação;
+- Distribuição por autor;
+- Distribuição por categoria;
+- Relação entre categorias e tipos de negociação;
+- Análise temporal dos anúncios;
+- Resumo mensal;
+- Quantidade de anúncios por mês e modalidade;
+- Evolução mensal por tipo de negociação;
+- Geração de insights;
+- Retorno de estruturas vazias quando não existem anúncios;
+- Tratamento de dados incompletos;
+- Tratamento de entradas nulas;
+- Normalização dos tipos de negociação, incluindo valores de Enum.
+
+### Testes de previsão temporal
+
+O módulo `PrevisaoTemporalAnalytics` possui testes automatizados em `tests/test_previsao_temporal_analytics.py`.
+
+Os testes verificam:
+
+- Estrutura do retorno;
+- Utilização da mesma implementação para séries de usuários e anúncios;
+- Preenchimento de meses ausentes;
+- Validação dos dados de entrada;
+- Histórico mínimo necessário;
+- Geração de projeções não negativas.
+
+A suíte específica de previsão temporal contém **11 casos de teste implementados**.
+
+### Execução dos testes
+
+Para executar todos os testes do serviço:
+
 ```bash
-pytest  -v
+pytest -v
 ```
-Na execução mais recente:
 
-- **64 testes aprovados**;
-- **0 testes com falha**;
-- tempo de execução de aproximadamente 10,65 segundos;
-
+---
 ## Integração com o Trocabook
 
 O serviço de Analytics será integrado ao sistema principal do Trocabook por meio de uma API REST.
@@ -195,24 +244,24 @@ A comunicação prevista entre os sistemas seguirá o fluxo conceitual abaixo:
 ```text
 Trocabook
 (Spring Boot)
-    │
-    │ DTOs / REST
-    ▼
+     │
+     │ DTOs / REST
+     ▼
 Serviço de Analytics
 (FastAPI)
-    │
-    ▼
+     │
+     ▼
 Análise e processamento
 dos dados
-    │
-    ▼
+     │
+     ▼
 Indicadores e projeções
-    │
-    ▼
+     │
+     ▼
 Trocabook
 (Spring Boot)
-    │
-    ▼
+     │
+     ▼
 Dashboard administrativo
 ```
 
@@ -237,9 +286,75 @@ O projeto utiliza ou prevê a utilização das seguintes tecnologias e bibliotec
 - **Matplotlib** — visualização de dados nos experimentos;
 - **Pydantic** — validação e estruturação de dados;
 - **Jupyter Notebook** — ambiente para experimentação e análise;
-- **Uvicorn** — servidor ASGI para execução da aplicação FastAPI.
+- **Uvicorn** — servidor ASGI para execução da aplicação FastAPI;
+- **Pytest** — implementação dos testes automatizados;
+- **Pytest-cov** — análise da cobertura dos testes.
 
 A utilização de cada tecnologia nas funcionalidades disponibilizadas pelo serviço depende da implementação correspondente.
+
+---
+
+## Executando o Projeto
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/PedroAmaralMa/trocabook-analytics-service.git
+```
+
+Entre no diretório:
+
+```bash
+cd trocabook-analytics-service
+```
+
+### 2. Crie um ambiente virtual
+
+```bash
+python -m venv .venv
+```
+
+### 3. Ative o ambiente virtual
+
+**Windows:**
+
+```bash
+.venv\Scripts\activate
+```
+
+**Linux/macOS:**
+
+```bash
+source .venv/bin/activate
+```
+
+### 4. Instale as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+### 5. Execute os testes
+
+```bash
+pytest -v
+```
+
+Para executar os testes com cobertura:
+
+```bash
+pytest --cov=app --cov-report=term-missing
+```
+
+### 6. Execute a API
+
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+A aplicação será iniciada localmente na porta configurada pelo projeto.
+
+A disponibilização dos endpoints e a documentação automática do FastAPI dependerão da implementação das rotas correspondentes.
 
 ---
 
@@ -259,7 +374,8 @@ A utilização de cada tecnologia nas funcionalidades disponibilizadas pelo serv
 - [x] Implementação dos testes automatizados para as análises de negociações;
 - [x] Implementação inicial do módulo reutilizável de previsão temporal;
 - [x] Criação dos testes automatizados para `PrevisaoTemporalAnalytics`;
-- [x] Execução da suíte de testes de negociações, com 40 testes aprovados.
+- [x] Implementação inicial do módulo de análise de anúncios;
+- [x] Criação dos testes automatizados para `AnuncioAnalytics`;
 
 ### Próximas etapas
 
@@ -280,4 +396,4 @@ A utilização de cada tecnologia nas funcionalidades disponibilizadas pelo serv
 
 O Trocabook é um projeto acadêmico desenvolvido com o objetivo de incentivar a reutilização de livros por meio de uma plataforma que possibilita a troca e venda de livros novos e usados.
 
-O projeto está relacionado ao **Objetivo de Desenvolvimento Sustentável 12 (ODS 12) — Consumo e Produção Responsáveis**, especialmente no que diz respeito
+O projeto está relacionado ao **Objetivo de Desenvolvimento Sustentável 12 (ODS 12) — Consumo e Produção Responsáveis**, especialmente no que diz respeito ao consumo consciente e à redução do desperdício por meio da reutilização de recursos.
