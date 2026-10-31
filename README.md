@@ -106,6 +106,19 @@ Os modelos preditivos utilizados nos experimentos representam abordagens iniciai
 
 ---
 
+## Camada de Serviço (Orquestração)
+
+A coordenação entre as diferentes análises descritivas, diagnósticas e preditivas é realizada pela classe **`TrocabookAnalyticsService`**, localizada em `app/service/trocabook_analytics_service.py`.
+
+### Responsabilidades do Serviço:
+
+- **Receber os dados de domínio:** aceita listas de objetos ou dicionários de `Anuncio`, `Negociacao` e `Usuario`;
+- **Delegar o processamento:** aciona `AnuncioAnalytics` e `NegociacaoAnalytics` para calcular estatísticas e métricas de desempenho;
+- **Executar as projeções temporais:** extrai automaticamente as séries mensais necessárias e aciona `PrevisaoTemporalAnalytics` para gerar previsões futuras de anúncios e usuários;
+- **Consolidar insights:** unifica e padroniza as interpretações geradas pelos módulos em um relatório estruturado único.
+
+---
+
 ## Estrutura do Projeto
 
 A estrutura atual do serviço está organizada da seguinte forma:
@@ -131,6 +144,10 @@ trocabook-analytics-service/
 │   │   ├── negociacao.py
 │   │   └── usuario.py
 │   │
+│   ├── service/
+│   │   ├── __init__.py
+│   │   └── trocabook_analytics_service.py
+│   │
 │   ├── __init__.py
 │   └── main.py
 │
@@ -144,7 +161,8 @@ trocabook-analytics-service/
 │   ├── __init__.py
 │   ├── test_anuncio_analytics.py
 │   ├── test_negociacao_analytics.py
-│   └── test_previsao_temporal_analytics.py
+│   ├── test_previsao_temporal_analytics.py
+│   └── test_trocabook_analytics_service.py
 │
 ├── .gitignore
 ├── requirements.txt
@@ -156,73 +174,43 @@ trocabook-analytics-service/
 
 - `analytics/` — contém os módulos responsáveis pelo processamento, análise e geração de indicadores, insights e previsões temporais;
 - `enums/` — contém as enumerações utilizadas para representar valores padronizados, como tipos e status de negociação;
-- `models/` — contém os modelos utilizados para representar e estruturar os dados recebidos pelo serviço;
+- `models/` — contém os modelos Pydantic para estruturação e validação dos dados;
+- `service/` — contém a camada de orquestração responsável por coordenar a execução de todas as análises e consolidar os resultados;
 - `notebooks/` — reúne os experimentos de análise de dados e desenvolvimento dos modelos preditivos;
-- `tests/` — contém os testes automatizados utilizados para verificar os comportamentos esperados dos módulos de análise e previsão;
+- `tests/` — contém os testes automatizados para verificar os comportamentos esperados de todos os módulos;
 - `main.py` — ponto de entrada da aplicação FastAPI.
 
-A arquitetura poderá receber novas camadas, como adapters, services e controllers, conforme a implementação da API e a integração com o sistema principal evoluírem.
 ---
 
 ## Testes Automatizados
 
-O serviço utiliza **pytest** para a implementação dos testes automatizados.
+O serviço utiliza **pytest** e **pytest-cov** para a implementação de testes automatizados e análise de cobertura de código.
 
-Os testes verificam os comportamentos esperados dos módulos de análise e previsão, incluindo cenários comuns, dados incompletos, entradas inválidas e situações em que não existem informações suficientes para determinadas operações.
+Na última execução registrada, todos os **88 testes foram aprovados**, alcançando **100% de cobertura** na camada de serviço.
 
-### Testes de análise de negociações
+### Cobertura da suíte de testes (88 testes aprovados)
 
-O módulo `NegociacaoAnalytics` possui uma suíte de testes que contempla:
+1. **Testes de análise de negociações (`tests/test_negociacao_analytics.py`) — 40 testes:**
+   - Análise geral, distribuição por modalidade e por categorias;
+   - Afinidade de categorias e combinações entre anúncios em trocas;
+   - Análise do tempo de finalização e ajuste estatístico Beta-Binomial;
+   - Geração de insights e tratamento de dados ausentes ou inconsistentes.
 
-- Análise geral das negociações;
-- Distribuição por modalidade;
-- Análise por categorias;
-- Afinidade entre categorias em negociações de troca;
-- Evolução temporal das negociações;
-- Análise do tempo médio de finalização;
-- Estimativas das taxas de finalização;
-- Geração de insights;
-- Tratamento de dados ausentes e datas inválidas;
-- Situações com informações insuficientes para determinadas estimativas.
+2. **Testes de análise de anúncios (`tests/test_anuncio_analytics.py`) — 16 testes:**
+   - Indicadores gerais, distribuições por tipo, autor e categoria;
+   - Análise temporal mensal, variação percentual e evolução por tipo;
+   - Tratamento de registros nulos, datas inválidas e estruturas vazias.
 
-Na execução anteriormente registrada, **40 testes foram aprovados**, sem falhas.
+3. **Testes de previsão temporal (`tests/test_previsao_temporal_analytics.py`) — 24 testes:**
+   - Validação de séries mensais e preenchimento de períodos ausentes;
+   - Cálculo das métricas de erro (MAE e RMSE) em conjunto de validação;
+   - Regras de histórico mínimo, projeções não negativas e validação de tipos de dados.
 
-### Testes de análise de anúncios
-
-O módulo `AnuncioAnalytics` possui testes automatizados em `tests/test_anuncio_analytics.py`.
-
-Os testes verificam:
-
-- Execução geral da análise dos anúncios;
-- Cálculo dos indicadores gerais;
-- Distribuição por tipo de negociação;
-- Distribuição por autor;
-- Distribuição por categoria;
-- Relação entre categorias e tipos de negociação;
-- Análise temporal dos anúncios;
-- Resumo mensal;
-- Quantidade de anúncios por mês e modalidade;
-- Evolução mensal por tipo de negociação;
-- Geração de insights;
-- Retorno de estruturas vazias quando não existem anúncios;
-- Tratamento de dados incompletos;
-- Tratamento de entradas nulas;
-- Normalização dos tipos de negociação, incluindo valores de Enum.
-
-### Testes de previsão temporal
-
-O módulo `PrevisaoTemporalAnalytics` possui testes automatizados em `tests/test_previsao_temporal_analytics.py`.
-
-Os testes verificam:
-
-- Estrutura do retorno;
-- Utilização da mesma implementação para séries de usuários e anúncios;
-- Preenchimento de meses ausentes;
-- Validação dos dados de entrada;
-- Histórico mínimo necessário;
-- Geração de projeções não negativas.
-
-A suíte específica de previsão temporal contém **11 casos de teste implementados**.
+4. **Testes do serviço orquestrador (`tests/test_trocabook_analytics_service.py`) — 8 testes:**
+   - Inicialização com dependências padrão e injeção de mocks;
+   - Validação da estrutura unificada do relatório consolidado;
+   - Formatação e rotulagem correta das origens dos insights;
+   - Tratamento de séries vazias, chaves ausentes e histórico insuficiente de usuários.
 
 ### Execução dos testes
 
@@ -232,7 +220,14 @@ Para executar todos os testes do serviço:
 pytest -v
 ```
 
+Para executar os testes com a análise detalhada de cobertura de código:
+
+```bash
+pytest --cov=app/service --cov-report=term-missing
+```
+
 ---
+
 ## Integração com o Trocabook
 
 O serviço de Analytics será integrado ao sistema principal do Trocabook por meio de uma API REST.
@@ -251,11 +246,14 @@ Serviço de Analytics
 (FastAPI)
      │
      ▼
-Análise e processamento
-dos dados
+TrocabookAnalyticsService
+     │
+     ├── AnuncioAnalytics
+     ├── NegociacaoAnalytics
+     └── PrevisaoTemporalAnalytics
      │
      ▼
-Indicadores e projeções
+Relatório Consolidado (Indicadores e Projeções)
      │
      ▼
 Trocabook
@@ -269,8 +267,6 @@ O serviço de Analytics não acessará diretamente o **Firebase**. O sistema pri
 
 Essa separação mantém a responsabilidade pela persistência no sistema principal e permite que o serviço de Analytics permaneça focado no processamento, na análise e na geração de indicadores e projeções.
 
-O fluxo apresentado representa a arquitetura planejada para a integração. A comunicação completa entre os sistemas e a apresentação dos resultados no dashboard ainda dependem das respectivas implementações.
-
 ---
 
 ## Tecnologias
@@ -278,19 +274,17 @@ O fluxo apresentado representa a arquitetura planejada para a integração. A co
 O projeto utiliza ou prevê a utilização das seguintes tecnologias e bibliotecas:
 
 - **Python** — linguagem de programação do serviço;
-- **FastAPI** — framework previsto para disponibilizar a API REST;
+- **FastAPI** — framework para disponibilização da API REST;
 - **Pandas** — manipulação e análise de dados;
 - **NumPy** — operações numéricas;
-- **Scikit-learn** — experimentos com modelos de aprendizado de máquina e métricas de avaliação;
-- **SciPy** — métodos de otimização e cálculos estatísticos;
+- **Scikit-learn** — modelos de regressão e métricas de avaliação;
+- **SciPy** — otimização por máxima verossimilhança (ajuste Beta-Binomial);
 - **Matplotlib** — visualização de dados nos experimentos;
 - **Pydantic** — validação e estruturação de dados;
-- **Jupyter Notebook** — ambiente para experimentação e análise;
+- **Jupyter Notebook** — ambiente para experimentação;
 - **Uvicorn** — servidor ASGI para execução da aplicação FastAPI;
 - **Pytest** — implementação dos testes automatizados;
 - **Pytest-cov** — análise da cobertura dos testes.
-
-A utilização de cada tecnologia nas funcionalidades disponibilizadas pelo serviço depende da implementação correspondente.
 
 ---
 
@@ -343,7 +337,7 @@ pytest -v
 Para executar os testes com cobertura:
 
 ```bash
-pytest --cov=app --cov-report=term-missing
+pytest --cov=app/service --cov-report=term-missing
 ```
 
 ### 6. Execute a API
@@ -351,10 +345,6 @@ pytest --cov=app --cov-report=term-missing
 ```bash
 python -m uvicorn app.main:app --reload
 ```
-
-A aplicação será iniciada localmente na porta configurada pelo projeto.
-
-A disponibilização dos endpoints e a documentação automática do FastAPI dependerão da implementação das rotas correspondentes.
 
 ---
 
@@ -369,26 +359,25 @@ A disponibilização dos endpoints e a documentação automática do FastAPI dep
 - [x] Desenvolvimento do experimento de análise de anúncios;
 - [x] Desenvolvimento do experimento de previsão de novos usuários;
 - [x] Desenvolvimento do experimento de previsão de novos anúncios;
-- [x] Definição inicial dos modelos utilizados pelo serviço;
+- [x] Definição inicial dos modelos Pydantic utilizados pelo serviço;
 - [x] Implementação inicial das análises de negociações;
 - [x] Implementação dos testes automatizados para as análises de negociações;
 - [x] Implementação inicial do módulo reutilizável de previsão temporal;
 - [x] Criação dos testes automatizados para `PrevisaoTemporalAnalytics`;
 - [x] Implementação inicial do módulo de análise de anúncios;
 - [x] Criação dos testes automatizados para `AnuncioAnalytics`;
+- [x] Implementação da camada de serviço (`TrocabookAnalyticsService`) para coordenação dos módulos de analytics e previsão;
+- [x] Criação dos testes automatizados para a camada de serviço (`TrocabookAnalyticsService`) com 100% de cobertura;
 
 ### Próximas etapas
 
-- [ ] Implementação das demais análises no serviço;
-- [ ] Implementação dos modelos preditivos no serviço;
-- [ ] Implementação dos adapters;
-- [ ] Implementação dos contratos de Request e Response;
-- [ ] Implementação dos services;
-- [ ] Implementação e validação dos endpoints REST;
-- [ ] Integração com o sistema principal do Trocabook;
+- [ ] Implementação do controller / router FastAPI (`AnalyticsController`);
+- [ ] Implementação das funções de serialização/mapeamento de respostas;
+- [ ] Implementação dos schemas de validação de requisição (`AnalyticsRelatorioRequest`);
+- [ ] Integração e validação dos endpoints REST;
+- [ ] Integração com o sistema principal do Trocabook (Spring Boot);
 - [ ] Integração dos resultados ao dashboard administrativo;
-- [ ] Ampliação dos testes automatizados para as demais funcionalidades;
-- [ ] Validação das análises e previsões com dados reais.
+- [ ] Validação das análises e previsões com dados reais da plataforma.
 
 ---
 
