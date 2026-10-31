@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 
-from app.service.trocabook_analytics_service import TrocabookAnalyticsService
+from app.services.trocabook_analytics_service import TrocabookAnalyticsService
 
 
 @pytest.fixture

@@ -108,7 +108,7 @@ Os modelos preditivos utilizados nos experimentos representam abordagens iniciai
 
 ## Camada de Serviço (Orquestração)
 
-A coordenação entre as diferentes análises descritivas, diagnósticas e preditivas é realizada pela classe **`TrocabookAnalyticsService`**, localizada em `app/service/trocabook_analytics_service.py`.
+A coordenação entre as diferentes análises descritivas, diagnósticas e preditivas é realizada pela classe **`TrocabookAnalyticsService`**, localizada em `app/services`.
 
 ### Responsabilidades do Serviço:
 
@@ -127,11 +127,30 @@ A estrutura atual do serviço está organizada da seguinte forma:
 trocabook-analytics-service/
 │
 ├── app/
+│   ├── adapters/
+│   │   ├── __init__.py
+│   │   ├── anuncio_adapter.py
+│   │   ├── negociacao_adapter.py
+│   │   └── previsao_temporal_adapter.py
+│   │
 │   ├── analytics/
 │   │   ├── __init__.py
 │   │   ├── anuncio_analytics.py
 │   │   ├── negociacao_analytics.py
 │   │   └── previsao_temporal_analytics.py
+│   │
+│   ├── controllers/
+│   │   ├── requests/
+│   │   │   ├── __init__.py
+│   │   │   ├── anuncio_request.py
+│   │   │   ├── negociacao_request.py
+│   │   │   └── previsao_usuarios_request.py
+│   │   │
+│   │   └── responses/
+│   │       ├── __init__.py
+│   │       ├── anuncio_response.py
+│   │       ├── negociacao_response.py
+│   │       └── previsao_temporal_response.py
 │   │
 │   ├── enums/
 │   │   ├── __init__.py
@@ -144,7 +163,7 @@ trocabook-analytics-service/
 │   │   ├── negociacao.py
 │   │   └── usuario.py
 │   │
-│   ├── service/
+│   ├── services/
 │   │   ├── __init__.py
 │   │   └── trocabook_analytics_service.py
 │   │
@@ -172,10 +191,12 @@ trocabook-analytics-service/
 
 ### Responsabilidades dos diretórios e arquivos
 
+- `adapters/` — contém os adaptadores responsáveis por converter estruturas internas e DataFrames em modelos de resposta da API;
 - `analytics/` — contém os módulos responsáveis pelo processamento, análise e geração de indicadores, insights e previsões temporais;
+- `controllers/` — reúne os schemas de validação de requisições (`requests/`) e as respostas formatadas da API (`responses/`);
 - `enums/` — contém as enumerações utilizadas para representar valores padronizados, como tipos e status de negociação;
-- `models/` — contém os modelos Pydantic para estruturação e validação dos dados;
-- `service/` — contém a camada de orquestração responsável por coordenar a execução de todas as análises e consolidar os resultados;
+- `models/` — contém os modelos Pydantic para estruturação e validação dos dados de domínio;
+- `services/` — contém a camada de orquestração responsável por coordenar a execução de todas as análises e consolidar os resultados;
 - `notebooks/` — reúne os experimentos de análise de dados e desenvolvimento dos modelos preditivos;
 - `tests/` — contém os testes automatizados para verificar os comportamentos esperados de todos os módulos;
 - `main.py` — ponto de entrada da aplicação FastAPI.
@@ -206,7 +227,7 @@ Na última execução registrada, todos os **88 testes foram aprovados**, alcan�
    - Cálculo das métricas de erro (MAE e RMSE) em conjunto de validação;
    - Regras de histórico mínimo, projeções não negativas e validação de tipos de dados.
 
-4. **Testes do serviço orquestrador (`tests/test_trocabook_analytics_service.py`) — 8 testes:**
+4. **Testes do serviço orquestrador (`tests/test_trocabook_analytics_service.py`) — 9 testes:**
    - Inicialização com dependências padrão e injeção de mocks;
    - Validação da estrutura unificada do relatório consolidado;
    - Formatação e rotulagem correta das origens dos insights;
@@ -331,7 +352,7 @@ pytest -v
 Para executar os testes com cobertura:
 
 ```bash
-pytest --cov=app/service --cov-report=term-missing
+pytest --cov=app/services --cov-report=term-missing
 ```
 
 ### 6. Execute a API
@@ -361,12 +382,13 @@ python -m uvicorn app.main:app --reload
 - [x] Implementação inicial do módulo de análise de anúncios;
 - [x] Criação dos testes automatizados para `AnuncioAnalytics`;
 - [x] Implementação da camada de serviço (`TrocabookAnalyticsService`) para coordenação dos módulos de analytics e previsão;
+- [x] Implementação dos modelos Pydantic de requisição (`AnuncioRequest`, `NegociacaoRequest`, `PrevisaoUsuariosRequest`);
+- [x] Implementação dos modelos Pydantic de resposta (`AnuncioResponse`, `NegociacaoResponse`, `PrevisaoUsuariosResponse`, `PrevisaoTemporalResponse`);
+- [x] Implementação das classes adaptadoras (`AnuncioAdapter`, `NegociacaoAdapter`, `PrevisaoTemporalAdapter`);
 
 ### Próximas etapas
 
 - [ ] Implementação do controller / router FastAPI (`AnalyticsController`);
-- [ ] Implementação das funções de serialização/mapeamento de respostas;
-- [ ] Implementação dos schemas de validação de requisição (`AnalyticsRelatorioRequest`);
 - [ ] Integração e validação dos endpoints REST;
 - [ ] Integração com o sistema principal do Trocabook (Spring Boot);
 - [ ] Integração dos resultados ao dashboard administrativo;
@@ -378,4 +400,4 @@ python -m uvicorn app.main:app --reload
 
 O Trocabook é um projeto acadêmico desenvolvido com o objetivo de incentivar a reutilização de livros por meio de uma plataforma que possibilita a troca e venda de livros novos e usados.
 
-O projeto está relacionado ao **Objetivo de Desenvolvimento Sustentável 12 (ODS 12) — Consumo e Produção Responsáveis**, especialmente no que diz respeito ao consumo consciente e à redução do desperdício por meio da reutilização de recursos.
+O projeto está relacionado ao **Objetivo de Desenvolvimento Sustentável 12 (ODS 12) — Consumo e Produção Responsáveis**, especialmente no que diz respeito ao consumo consciente e à redução do desperdício por meio da reutilização de recursos.pytest t
