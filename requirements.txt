@@ -8,3 +8,4 @@ matplotlib
 pydantic
 pytest
 pytest-cov
+httpx2

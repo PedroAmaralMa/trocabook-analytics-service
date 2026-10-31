@@ -147,6 +147,10 @@ class TrocabookAnalyticsService:
             logger.warning("Série temporal de anúncios vazia. Previsão omitida.")
             return None
 
+        if len(serie_anuncios) < (quantidade_teste + 2):
+            logger.warning("Histórico de anúncios insuficiente para previsão.")
+            return None
+
         return self.previsao_analytics.prever(
             serie_mensal=serie_anuncios,
             coluna_periodo="mesCriacao",

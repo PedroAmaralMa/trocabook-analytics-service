@@ -4,7 +4,7 @@ Serviço de Analytics desenvolvido para o **Trocabook**, uma plataforma voltada 
 
 O projeto é responsável pela aplicação de técnicas de **análise e mineração de dados** para extrair informações da plataforma e gerar indicadores, insights e projeções que auxiliem no acompanhamento da evolução do Trocabook e na tomada de decisões.
 
-O serviço é desenvolvido em **Python** e utiliza **Pandas** para o processamento e análise dos dados. A disponibilização por meio de uma API REST utilizando **FastAPI** está prevista para permitir sua integração com o sistema principal do Trocabook, desenvolvido em **Spring Boot**.
+O serviço é desenvolvido em **Python** e utiliza **Pandas** para o processamento e análise dos dados. A disponibilização é realizada por meio de uma API REST desenvolvida em **FastAPI**, integrada ao sistema principal do Trocabook em **Spring Boot**.
 
 ---
 
@@ -19,7 +19,7 @@ Inicialmente, o serviço contempla quatro frentes:
 - Previsão da quantidade de novos usuários;
 - Previsão da quantidade de novos anúncios.
 
-As análises e os modelos foram inicialmente desenvolvidos e avaliados de forma experimental utilizando dados simulados. A utilização de dados reais da plataforma será realizada durante a integração com o sistema principal.
+As análises e os modelos foram inicialmente desenvolvidos e avaliados de forma experimental utilizando dados simulados. A utilização de dados reais da plataforma é realizada durante a integração com o sistema principal.
 
 ---
 
@@ -106,16 +106,15 @@ Os modelos preditivos utilizados nos experimentos representam abordagens iniciai
 
 ---
 
-## Camada de Serviço (Orquestração)
+## Camada de Serviço e API REST
 
-A coordenação entre as diferentes análises descritivas, diagnósticas e preditivas é realizada pela classe **`TrocabookAnalyticsService`**, localizada em `app/services`.
+A coordenação entre as análises descritivas, diagnósticas e preditivas é realizada pela classe **`TrocabookAnalyticsService`**, localizada em `app/services`.
 
-### Responsabilidades do Serviço:
+A API expõe três endpoints principais via FastAPI em `app/controllers/analytics_controller.py`:
 
-- **Receber os dados de domínio:** aceita listas de objetos ou dicionários de `Anuncio`, `Negociacao` e `Usuario`;
-- **Delegar o processamento:** aciona `AnuncioAnalytics` e `NegociacaoAnalytics` para calcular estatísticas e métricas de desempenho;
-- **Executar as projeções temporais:** extrai automaticamente as séries mensais necessárias e aciona `PrevisaoTemporalAnalytics` para gerar previsões futuras de anúncios e usuários;
-- **Consolidar insights:** unifica e padroniza as interpretações geradas pelos módulos em um relatório estruturado único.
+- **`POST /analytics/anuncios`**: Indicadores completos dos anúncios e previsão temporal de novos anúncios;
+- **`POST /analytics/negociacoes`**: Indicadores detalhados, diagnósticos e afinidades das negociações;
+- **`POST /analytics/previsao-temporal`**: Projeções temporais de novos cadastros de usuários.
 
 ---
 
@@ -146,16 +145,23 @@ trocabook-analytics-service/
 │   │   │   ├── negociacao_request.py
 │   │   │   └── previsao_usuarios_request.py
 │   │   │
-│   │   └── responses/
-│   │       ├── __init__.py
-│   │       ├── anuncio_response.py
-│   │       ├── negociacao_response.py
-│   │       └── previsao_temporal_response.py
+│   │   ├── responses/
+│   │   │   ├── __init__.py
+│   │   │   ├── anuncio_response.py
+│   │   │   ├── negociacao_response.py
+│   │   │   └── previsao_temporal_response.py
+│   │   │
+│   │   ├── __init__.py
+│   │   └── analytics_controller.py
 │   │
 │   ├── enums/
 │   │   ├── __init__.py
 │   │   ├── status_negociacao.py
 │   │   └── tipo_negociacao.py
+│   │
+│   ├── exceptions/
+│   │   ├── __init__.py
+│   │   └── analytics_exception.py
 │   │
 │   ├── models/
 │   │   ├── __init__.py
@@ -178,6 +184,7 @@ trocabook-analytics-service/
 │
 ├── tests/
 │   ├── __init__.py
+│   ├── test_analytics_controller.py
 │   ├── test_anuncio_analytics.py
 │   ├── test_negociacao_analytics.py
 │   ├── test_previsao_temporal_analytics.py
@@ -191,31 +198,32 @@ trocabook-analytics-service/
 
 ### Responsabilidades dos diretórios e arquivos
 
-- `adapters/` — contém os adaptadores responsáveis por converter estruturas internas e DataFrames em modelos de resposta da API;
-- `analytics/` — contém os módulos responsáveis pelo processamento, análise e geração de indicadores, insights e previsões temporais;
-- `controllers/` — reúne os schemas de validação de requisições (`requests/`) e as respostas formatadas da API (`responses/`);
-- `enums/` — contém as enumerações utilizadas para representar valores padronizados, como tipos e status de negociação;
-- `models/` — contém os modelos Pydantic para estruturação e validação dos dados de domínio;
-- `services/` — contém a camada de orquestração responsável por coordenar a execução de todas as análises e consolidar os resultados;
-- `notebooks/` — reúne os experimentos de análise de dados e desenvolvimento dos modelos preditivos;
-- `tests/` — contém os testes automatizados para verificar os comportamentos esperados de todos os módulos;
-- `main.py` — ponto de entrada da aplicação FastAPI.
+- `adapters/` — contém as classes adaptadoras que transformam DataFrames e estruturas internas em objetos DTO de resposta da API;
+- `analytics/` — contém os módulos responsáveis pelo processamento, análise descritiva/diagnóstica e previsão temporal;
+- `controllers/` — contém o controlador REST (`analytics_controller.py`), contratos de entrada (`requests/`) e respostas formatadas (`responses/`);
+- `enums/` — contém as enumerações padronizadas de domínio, como tipos e status de negociação;
+- `exceptions/` — contém as exceções customizadas da aplicação (`AnalyticsException`);
+- `models/` — contém os modelos Pydantic de validação das entidades de domínio (`Anuncio`, `Negociacao`, `Usuario`);
+- `services/` — contém o orquestrador `TrocabookAnalyticsService`;
+- `notebooks/` — reúne os experimentos e protótipos de dados;
+- `tests/` — contém a suíte completa de testes unitários e de integração com `TestClient`;
+- `main.py` — ponto de entrada da aplicação FastAPI e registrador de exception handlers.
 
 ---
 
 ## Testes Automatizados
 
-O serviço utiliza **pytest** e **pytest-cov** para a implementação de testes automatizados e análise de cobertura de código.
+O serviço utiliza **pytest** e **pytest-cov** para testes automatizados e análise de cobertura de código.
 
-Na última execução registrada, todos os **88 testes foram aprovados**, alcançando **100% de cobertura** na camada de serviço.
+Na execução mais recente, **98 testes foram aprovados**, alcançando **97% de cobertura geral** do projeto (com 100% de cobertura nos Controllers, Schemas e Entrypoint).
 
-### Cobertura da suíte de testes (88 testes aprovados)
+### Cobertura da suíte de testes (98 testes aprovados)
 
 1. **Testes de análise de negociações (`tests/test_negociacao_analytics.py`) — 40 testes:**
    - Análise geral, distribuição por modalidade e por categorias;
-   - Afinidade de categorias e combinações entre anúncios em trocas;
-   - Análise do tempo de finalização e ajuste estatístico Beta-Binomial;
-   - Geração de insights e tratamento de dados ausentes ou inconsistentes.
+   - Afinidade de categorias e combinações em trocas;
+   - Tempo de finalização e ajuste estatístico Beta-Binomial;
+   - Insights e resiliência a dados ausentes.
 
 2. **Testes de análise de anúncios (`tests/test_anuncio_analytics.py`) — 16 testes:**
    - Indicadores gerais, distribuições por tipo, autor e categoria;
@@ -223,42 +231,56 @@ Na última execução registrada, todos os **88 testes foram aprovados**, alcan�
    - Tratamento de registros nulos, datas inválidas e estruturas vazias.
 
 3. **Testes de previsão temporal (`tests/test_previsao_temporal_analytics.py`) — 24 testes:**
-   - Validação de séries mensais e preenchimento de períodos ausentes;
-   - Cálculo das métricas de erro (MAE e RMSE) em conjunto de validação;
-   - Regras de histórico mínimo, projeções não negativas e validação de tipos de dados.
+   - Validação de séries mensais e preenchimento de lacunas temporais;
+   - Cálculo de métricas de erro (MAE e RMSE);
+   - Regras de histórico mínimo, projeções não negativas e validações.
 
 4. **Testes do serviço orquestrador (`tests/test_trocabook_analytics_service.py`) — 9 testes:**
-   - Inicialização com dependências padrão e injeção de mocks;
-   - Validação da estrutura unificada do relatório consolidado;
-   - Formatação e rotulagem correta das origens dos insights;
-   - Tratamento de séries vazias, chaves ausentes e histórico insuficiente de usuários.
+   - Inicialização e injeção de mocks;
+   - Execução isolada dos métodos de anúncios, negociações e usuários;
+   - Tratamento de séries temporais vazias ou insuficientes.
+
+5. **Testes de integração do Controller (`tests/test_analytics_controller.py`) — 9 testes:**
+   - Requisições HTTP via FastAPI `TestClient`;
+   - Validação de payload correto e retorno 200 OK;
+   - Validação de parâmetros inválidos com HTTP 422;
+   - Manipulação de erro interno e captura da `AnalyticsException` com HTTP 500.
 
 ### Execução dos testes
 
-Para executar todos os testes do serviço:
+Para executar a suíte completa de testes:
 
 ```bash
 pytest -v
+```
+
+Para executar os testes com relatório detalhado de cobertura:
+
+```bash
+pytest --cov=app --cov-report=term-missing
 ```
 
 ---
 
 ## Integração com o Trocabook
 
-O serviço de Analytics será integrado ao sistema principal do Trocabook por meio de uma API REST.
+O serviço de Analytics é integrado ao sistema principal do Trocabook por meio de uma API REST.
 
-O sistema principal, desenvolvido em **Spring Boot**, permanecerá responsável pela persistência e recuperação dos dados da aplicação.
+O sistema principal, desenvolvido em **Spring Boot**, é responsável pela persistência e recuperação dos dados da aplicação.
 
-A comunicação prevista entre os sistemas seguirá o fluxo conceitual abaixo:
+A comunicação entre os sistemas segue o fluxo abaixo:
 
 ```text
 Trocabook
 (Spring Boot)
      │
-     │ DTOs / REST
+     │ DTOs / REST HTTP POST
      ▼
 Serviço de Analytics
 (FastAPI)
+     │
+     ▼
+AnalyticsController
      │
      ▼
 TrocabookAnalyticsService
@@ -268,7 +290,10 @@ TrocabookAnalyticsService
      └── PrevisaoTemporalAnalytics
      │
      ▼
-Relatório Consolidado (Indicadores e Projeções)
+Adapters (AnuncioAdapter, NegociacaoAdapter, PrevisaoTemporalAdapter)
+     │
+     ▼
+Respostas JSON Formatadas
      │
      ▼
 Trocabook
@@ -278,28 +303,23 @@ Trocabook
 Dashboard administrativo
 ```
 
-O serviço de Analytics não acessará diretamente o **Firebase**. O sistema principal será responsável por recuperar os dados necessários e enviá-los ao serviço por meio de DTOs específicos para cada análise.
-
-Essa separação mantém a responsabilidade pela persistência no sistema principal e permite que o serviço de Analytics permaneça focado no processamento, na análise e na geração de indicadores e projeções.
+O serviço de Analytics não acessa diretamente o banco de dados. O sistema principal recupera os dados necessários e os envia em payloads JSON para cada endpoint correspondente.
 
 ---
 
 ## Tecnologias
 
-O projeto utiliza ou prevê a utilização das seguintes tecnologias e bibliotecas:
-
-- **Python** — linguagem de programação do serviço;
+- **Python** — linguagem de programação principal;
 - **FastAPI** — framework para disponibilização da API REST;
 - **Pandas** — manipulação e análise de dados;
 - **NumPy** — operações numéricas;
 - **Scikit-learn** — modelos de regressão e métricas de avaliação;
 - **SciPy** — otimização por máxima verossimilhança (ajuste Beta-Binomial);
-- **Matplotlib** — visualização de dados nos experimentos;
-- **Pydantic** — validação e estruturação de dados;
-- **Jupyter Notebook** — ambiente para experimentação;
-- **Uvicorn** — servidor ASGI para execução da aplicação FastAPI;
-- **Pytest** — implementação dos testes automatizados;
-- **Pytest-cov** — análise da cobertura dos testes.
+- **Pydantic** — validação de dados e contratos de DTO;
+- **Uvicorn** — servidor ASGI para execução da API;
+- **Pytest & Pytest-cov** — suíte de testes e medição de cobertura;
+- **Jupyter Notebook** — ambiente experimental.
+- **HTTPX2** — para suporte aos testes da API com `TestClient`.
 
 ---
 
@@ -349,10 +369,10 @@ pip install -r requirements.txt
 pytest -v
 ```
 
-Para executar os testes com cobertura:
+Para verificar a cobertura de código:
 
 ```bash
-pytest --cov=app/services --cov-report=term-missing
+pytest --cov=app --cov-report=term-missing
 ```
 
 ### 6. Execute a API
@@ -361,38 +381,34 @@ pytest --cov=app/services --cov-report=term-missing
 python -m uvicorn app.main:app --reload
 ```
 
+A documentação interativa da API estará disponível em:
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
+
 ---
 
 ## Status
 
-**Em desenvolvimento.**
+**Pronto para integração.**
 
 ### Concluído
 
 - [x] Criação da estrutura inicial do serviço;
-- [x] Desenvolvimento do experimento de análise de negociações;
-- [x] Desenvolvimento do experimento de análise de anúncios;
-- [x] Desenvolvimento do experimento de previsão de novos usuários;
-- [x] Desenvolvimento do experimento de previsão de novos anúncios;
-- [x] Definição inicial dos modelos Pydantic utilizados pelo serviço;
-- [x] Implementação inicial das análises de negociações;
-- [x] Implementação dos testes automatizados para as análises de negociações;
-- [x] Implementação inicial do módulo reutilizável de previsão temporal;
-- [x] Criação dos testes automatizados para `PrevisaoTemporalAnalytics`;
-- [x] Implementação inicial do módulo de análise de anúncios;
-- [x] Criação dos testes automatizados para `AnuncioAnalytics`;
-- [x] Implementação da camada de serviço (`TrocabookAnalyticsService`) para coordenação dos módulos de analytics e previsão;
-- [x] Implementação dos modelos Pydantic de requisição (`AnuncioRequest`, `NegociacaoRequest`, `PrevisaoUsuariosRequest`);
-- [x] Implementação dos modelos Pydantic de resposta (`AnuncioResponse`, `NegociacaoResponse`, `PrevisaoUsuariosResponse`, `PrevisaoTemporalResponse`);
-- [x] Implementação das classes adaptadoras (`AnuncioAdapter`, `NegociacaoAdapter`, `PrevisaoTemporalAdapter`);
+- [x] Desenvolvimento dos experimentos em Jupyter Notebooks;
+- [x] Definição dos modelos Pydantic de domínio (`Anuncio`, `Negociacao`, `Usuario`);
+- [x] Implementação dos módulos de análise (`AnuncioAnalytics`, `NegociacaoAnalytics`, `PrevisaoTemporalAnalytics`);
+- [x] Implementação do orquestrador `TrocabookAnalyticsService`;
+- [x] Implementação dos modelos Pydantic de requisição e resposta (Requests/Responses DTOs);
+- [x] Implementação dos adaptadores de dados (`AnuncioAdapter`, `NegociacaoAdapter`, `PrevisaoTemporalAdapter`);
+- [x] Implementação do controlador REST FastAPI (`AnalyticsController`) com três endpoints;
+- [x] Tratamento de exceção padronizado com `AnalyticsException` e HTTP 500;
+- [x] Suíte completa de 98 testes automatizados aprovados com 97% de cobertura geral.
 
 ### Próximas etapas
 
-- [ ] Implementação do controller / router FastAPI (`AnalyticsController`);
-- [ ] Integração e validação dos endpoints REST;
-- [ ] Integração com o sistema principal do Trocabook (Spring Boot);
-- [ ] Integração dos resultados ao dashboard administrativo;
-- [ ] Validação das análises e previsões com dados reais da plataforma.
+- [ ] Integração do cliente HTTP no sistema principal do Trocabook (Spring Boot);
+- [ ] Renderização dos dados consumidos no dashboard administrativo da plataforma;
+- [ ] Validação dos modelos preditivos com volume real de dados.
 
 ---
 
@@ -400,4 +416,4 @@ python -m uvicorn app.main:app --reload
 
 O Trocabook é um projeto acadêmico desenvolvido com o objetivo de incentivar a reutilização de livros por meio de uma plataforma que possibilita a troca e venda de livros novos e usados.
 
-O projeto está relacionado ao **Objetivo de Desenvolvimento Sustentável 12 (ODS 12) — Consumo e Produção Responsáveis**, especialmente no que diz respeito ao consumo consciente e à redução do desperdício por meio da reutilização de recursos.pytest t
+O projeto está relacionado ao **Objetivo de Desenvolvimento Sustentável 12 (ODS 12) — Consumo e Produção Responsáveis**, especialmente no que diz respeito ao consumo consciente e à redução do desperdício por meio da reutilização de recursos.
