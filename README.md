@@ -220,12 +220,6 @@ Para executar todos os testes do serviço:
 pytest -v
 ```
 
-Para executar os testes com a análise detalhada de cobertura de código:
-
-```bash
-pytest --cov=app/service --cov-report=term-missing
-```
-
 ---
 
 ## Integração com o Trocabook
@@ -367,7 +361,6 @@ python -m uvicorn app.main:app --reload
 - [x] Implementação inicial do módulo de análise de anúncios;
 - [x] Criação dos testes automatizados para `AnuncioAnalytics`;
 - [x] Implementação da camada de serviço (`TrocabookAnalyticsService`) para coordenação dos módulos de analytics e previsão;
-- [x] Criação dos testes automatizados para a camada de serviço (`TrocabookAnalyticsService`) com 100% de cobertura;
 
 ### Próximas etapas
 

@@ -77,39 +77,34 @@ def test_inicializacao_com_dependencias_padrao():
     assert service_padrao.previsao_analytics is not None
 
 
-def test_gerar_relatorio_consolidado_estrutura_completa(
-    service,
-    mock_anuncio_analytics,
-    mock_negociacao_analytics,
-    mock_previsao_analytics,
-    usuarios_mock
-):
-    resultado = service.gerar_relatorio_consolidado(
+def test_analisar_anuncios_sucesso(service, mock_anuncio_analytics, mock_previsao_analytics):
+    resultado = service.analisar_anuncios(
         anuncios=[],
-        negociacoes=[],
+        horizonte_previsao=12,
+        quantidade_teste=4
+    )
+
+    assert set(resultado) == {"analise", "previsao"}
+    mock_anuncio_analytics.analisar.assert_called_once_with([])
+    mock_previsao_analytics.prever.assert_called_once()
+
+
+def test_analisar_negociacoes_sucesso(service, mock_negociacao_analytics):
+    resultado = service.analisar_negociacoes(negociacoes=[])
+
+    assert resultado == mock_negociacao_analytics.analisar.return_value
+    mock_negociacao_analytics.analisar.assert_called_once_with([])
+
+
+def test_gerar_previsoes_temporais_sucesso(service, mock_previsao_analytics, usuarios_mock):
+    resultado = service.gerar_previsoes_temporais(
         usuarios=usuarios_mock,
         horizonte_previsao=12,
         quantidade_teste=4
     )
 
-    assert set(resultado) == {"anuncios", "negociacoes", "previsoes", "insights"}
-    assert set(resultado["previsoes"]) == {"anuncios", "usuarios"}
-
-    mock_anuncio_analytics.analisar.assert_called_once_with([])
-    mock_negociacao_analytics.analisar.assert_called_once_with([])
-    assert mock_previsao_analytics.prever.call_count == 2
-
-
-def test_consolidacao_de_insights_formatacao_e_origem(service):
-    anuncios_insights = ["Insight anúncio 1", "Insight anúncio 2"]
-    negociacoes_insights = [{"tipo": "TESTE", "mensagem": "Insight negociação 1"}]
-
-    resultado = service._consolidar_insights(anuncios_insights, negociacoes_insights)
-
-    assert len(resultado) == 3
-    assert resultado[0] == {"origem": "ANUNCIOS", "conteudo": "Insight anúncio 1"}
-    assert resultado[1] == {"origem": "ANUNCIOS", "conteudo": "Insight anúncio 2"}
-    assert resultado[2] == {"origem": "NEGOCIACOES", "conteudo": negociacoes_insights[0]}
+    assert resultado == mock_previsao_analytics.prever.return_value
+    mock_previsao_analytics.prever.assert_called_once()
 
 
 def test_prever_anuncios_com_serie_vazia(service, mock_anuncio_analytics, mock_previsao_analytics):
@@ -117,13 +112,10 @@ def test_prever_anuncios_com_serie_vazia(service, mock_anuncio_analytics, mock_p
         "temporal": {"anunciosPorMes": pd.DataFrame()}
     }
 
-    resultado = service._prever_anuncios(
-        analise_anuncios=mock_anuncio_analytics.analisar.return_value,
-        horizonte=12,
-        quantidade_teste=6
-    )
+    resultado = service.analisar_anuncios(anuncios=[])
 
-    assert resultado is None
+    assert resultado["analise"] is not None
+    assert resultado["previsao"] is None
     mock_previsao_analytics.prever.assert_not_called()
 
 
@@ -137,11 +129,7 @@ def test_prever_anuncios_com_chave_temporal_ausente(service):
 
 
 def test_prever_usuarios_com_lista_vazia(service, mock_previsao_analytics):
-    resultado = service._prever_usuarios(
-        usuarios=[],
-        horizonte=12,
-        quantidade_teste=6
-    )
+    resultado = service.gerar_previsoes_temporais(usuarios=[])
     assert resultado is None
     mock_previsao_analytics.prever.assert_not_called()
 
@@ -157,9 +145,9 @@ def test_prever_usuarios_com_historico_insuficiente(service, mock_previsao_analy
         UsuarioMock(datetime(2024, 3, 1))
     ]
 
-    resultado = service._prever_usuarios(
+    resultado = service.gerar_previsoes_temporais(
         usuarios=usuarios_insuficientes,
-        horizonte=12,
+        horizonte_previsao=12,
         quantidade_teste=6
     )
 
@@ -167,12 +155,12 @@ def test_prever_usuarios_com_historico_insuficiente(service, mock_previsao_analy
     mock_previsao_analytics.prever.assert_not_called()
 
 
-def test_gerar_relatorio_consolidado_sem_usuarios(service):
-    resultado = service.gerar_relatorio_consolidado(
-        anuncios=[],
-        negociacoes=[],
-        usuarios=None
-    )
+def test_consolidar_insights(service):
+    anuncios_insights = ["Insight 1"]
+    negociacoes_insights = [{"tipo": "TESTE", "mensagem": "Insight 2"}]
 
-    assert resultado["previsoes"]["usuarios"] is None
-    assert resultado["previsoes"]["anuncios"] is not None
+    resultado = service._consolidar_insights(anuncios_insights, negociacoes_insights)
+
+    assert len(resultado) == 2
+    assert resultado[0] == {"origem": "ANUNCIOS", "conteudo": "Insight 1"}
+    assert resultado[1] == {"origem": "NEGOCIACOES", "conteudo": negociacoes_insights[0]}

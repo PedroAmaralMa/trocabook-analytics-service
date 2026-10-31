@@ -40,69 +40,89 @@ class TrocabookAnalyticsService:
         self.negociacao_analytics = negociacao_analytics or NegociacaoAnalytics()
         self.previsao_analytics = previsao_analytics or PrevisaoTemporalAnalytics()
 
-    def gerar_relatorio_consolidado(
-        self,
-        anuncios: Sequence[Anuncio | dict[str, Any]],
-        negociacoes: list[Negociacao],
-        usuarios: list[Usuario] | None = None,
-        horizonte_previsao: int = 12,
-        quantidade_teste: int = 6,
+    def analisar_anuncios(
+            self,
+            anuncios: Sequence[Anuncio | dict[str, Any]],
+            horizonte_previsao: int = 12,
+            quantidade_teste: int = 6,
     ) -> dict[str, Any]:
-        """Executa todas as análises e previsões da plataforma.
+        """
+        Executa a análise dos anúncios e sua previsão temporal.
 
         Args:
-            anuncios: Lista de anúncios ativos/históricos.
-            negociacoes: Lista de negociações.
-            usuarios: Lista de utilizadores para previsão de novos registos.
-            horizonte_previsao: Meses futuros para projeção temporal.
-            quantidade_teste: Meses reservados para validação do modelo.
+            anuncios: Lista de anúncios ativos ou históricos.
+            horizonte_previsao: Quantidade de meses futuros para projeção.
+            quantidade_teste: Quantidade de meses reservados para validação do modelo.
 
         Returns:
-            Dicionário unificado contendo análises de anúncios, negociações,
-            previsões de tendência e lista consolidada de insights.
+            Dicionário contendo os indicadores da análise dos anúncios e sua previsão temporal.
         """
         logger.info(
-            "Iniciando relatório consolidado. Anúncios: %d | Negociações: %d | Utilizadores: %d",
+            "Iniciando análise de anúncios. Total: %d",
             len(anuncios) if anuncios else 0,
-            len(negociacoes) if negociacoes else 0,
-            len(usuarios) if usuarios else 0,
         )
 
-        # 1. Análise Descritiva de Anúncios
-        analise_anuncios = self.anuncio_analytics.analisar(anuncios)
+        analise = self.anuncio_analytics.analisar(anuncios)
 
-        # 2. Análise Descritiva e Diagnóstica de Negociações
-        analise_negociacoes = self.negociacao_analytics.analisar(negociacoes)
-
-        # 3. Previsão Temporal de Anúncios
-        previsao_anuncios = self._prever_anuncios(
-            analise_anuncios=analise_anuncios,
+        previsao = self._prever_anuncios(
+            analise_anuncios=analise,
             horizonte=horizonte_previsao,
             quantidade_teste=quantidade_teste,
         )
 
-        # 4. Previsão Temporal de Utilizadores (se informados)
-        previsao_usuarios = self._prever_usuarios(
+        return {
+            "analise": analise,
+            "previsao": previsao,
+        }
+
+    def analisar_negociacoes(
+            self,
+            negociacoes: list[Negociacao],
+    ) -> dict[str, Any]:
+        """
+        Executa a análise completa das negociações.
+
+        Args:
+            negociacoes: Lista de negociações da plataforma.
+
+        Returns:
+            Dicionário contendo os indicadores e insights das negociações.
+        """
+        logger.info(
+            "Iniciando análise de negociações. Total: %d",
+            len(negociacoes) if negociacoes else 0,
+        )
+
+        return self.negociacao_analytics.analisar(negociacoes)
+
+    def gerar_previsoes_temporais(
+            self,
+            usuarios: list[Usuario] | None = None,
+            horizonte_previsao: int = 12,
+            quantidade_teste: int = 6,
+    ) -> dict[str, Any] | None:
+        """
+        Gera a previsão temporal de novos usuários.
+
+        Args:
+            usuarios: Lista de usuários utilizados para gerar a previsão.
+            horizonte_previsao: Quantidade de meses futuros para projeção.
+            quantidade_teste: Quantidade de meses reservados para validação do modelo.
+
+        Returns:
+            Dicionário contendo a previsão temporal de novos usuários ou None
+            caso não existam dados suficientes para realizar a previsão.
+        """
+        logger.info(
+            "Iniciando previsão temporal de usuários. Total: %d",
+            len(usuarios) if usuarios else 0,
+        )
+
+        return self._prever_usuarios(
             usuarios=usuarios or [],
             horizonte=horizonte_previsao,
             quantidade_teste=quantidade_teste,
         )
-
-        # 5. Consolidação de Insights Globais
-        insights_globais = self._consolidar_insights(
-            analise_anuncios.get("insights", []),
-            analise_negociacoes.get("insights", []),
-        )
-
-        return {
-            "anuncios": analise_anuncios,
-            "negociacoes": analise_negociacoes,
-            "previsoes": {
-                "anuncios": previsao_anuncios,
-                "usuarios": previsao_usuarios,
-            },
-            "insights": insights_globais,
-        }
 
     def _prever_anuncios(
         self,
