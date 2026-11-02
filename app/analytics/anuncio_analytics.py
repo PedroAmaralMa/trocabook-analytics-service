@@ -416,17 +416,6 @@ class AnuncioAnalytics:
         return {"quantidades": quantidades, "percentuais": percentuais}
 
     def _analisar_temporal(self, dataframe: pd.DataFrame) -> dict[str, Any]:
-        """Calcula volume mensal, variação percentual e evolução por modalidade.
-
-        Args:
-            dataframe: DataFrame de anúncios com ``dataCriacao`` e ``mesCriacao``
-                normalizados.
-
-        Returns:
-            Dicionário contendo ``anunciosPorMes``, ``anunciosPorMesTipo``,
-            ``evolucaoPorTipo`` e ``resumoMensal``. Meses sem anúncios não são
-            interpolados: somente meses presentes nos dados são retornados.
-        """
         logger.debug("Iniciando análise temporal dos anúncios.")
         dados_validos = dataframe[dataframe["mesCriacao"].notna()].copy()
         if dados_validos.empty:
@@ -440,6 +429,9 @@ class AnuncioAnalytics:
             .sort_values("mesCriacao")
             .reset_index(drop=True)
         )
+
+        por_mes["mesCriacao"] = por_mes["mesCriacao"].astype(str)
+
         por_mes["variacaoPercentual"] = (
             por_mes["novosAnuncios"].pct_change().mul(100).round(2)
         )
@@ -452,6 +444,8 @@ class AnuncioAnalytics:
             .sort_values(["mesCriacao", "tipoNegociacao"])
             .reset_index(drop=True)
         )
+
+        por_mes_tipo["mesCriacao"] = por_mes_tipo["mesCriacao"].astype(str)
 
         if por_mes_tipo.empty:
             evolucao = pd.DataFrame(
@@ -466,29 +460,32 @@ class AnuncioAnalytics:
             evolucao = evolucao.reindex(columns=self.TIPOS_NEGOCIACAO, fill_value=0)
             evolucao = evolucao.reindex(por_mes["mesCriacao"], fill_value=0)
             evolucao.columns.name = "tipoNegociacao"
+            evolucao.index = evolucao.index.astype(str)
 
         variacoes = por_mes.dropna(subset=["variacaoPercentual"])
         crescimento = variacoes.loc[variacoes["variacaoPercentual"].idxmax()] if not variacoes.empty else None
         reducao = variacoes.loc[variacoes["variacaoPercentual"].idxmin()] if not variacoes.empty else None
+
         resumo = {
             "quantidadeMeses": int(len(por_mes)),
             "menorQuantidade": int(por_mes["novosAnuncios"].min()),
             "maiorQuantidade": int(por_mes["novosAnuncios"].max()),
             "mediaMensal": round(float(por_mes["novosAnuncios"].mean()), 2),
             "maiorCrescimento": (
-                {"mesCriacao": crescimento["mesCriacao"],
+                {"mesCriacao": str(crescimento["mesCriacao"]),  # <-- Converteu para str!
                  "variacaoPercentual": float(crescimento["variacaoPercentual"])}
                 if crescimento is not None and crescimento["variacaoPercentual"] > 0
                 else None
             ),
             "maiorReducao": (
-                {"mesCriacao": reducao["mesCriacao"],
+                {"mesCriacao": str(reducao["mesCriacao"]),  # <-- Converteu para str!
                  "variacaoPercentual": float(reducao["variacaoPercentual"])}
                 if reducao is not None and reducao["variacaoPercentual"] < 0
                 else None
             ),
         }
-        logger.debug("Análise temporal concluída. Meses: %d; registros temporais: %d.", len(por_mes), len(dados_validos))
+        logger.debug("Análise temporal concluída. Meses: %d; registros temporais: %d.", len(por_mes),
+                     len(dados_validos))
         return {
             "anunciosPorMes": por_mes,
             "anunciosPorMesTipo": por_mes_tipo,

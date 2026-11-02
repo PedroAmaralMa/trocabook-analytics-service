@@ -403,12 +403,13 @@ A documentação interativa da API estará disponível em:
 - [x] Implementação do controlador REST FastAPI (`AnalyticsController`) com três endpoints;
 - [x] Tratamento de exceção padronizado com `AnalyticsException` e HTTP 500;
 - [x] Suíte completa de 98 testes automatizados aprovados com 97% de cobertura geral.
+- [x] Integração do cliente HTTP no sistema principal do Trocabook (Spring Boot);
+- [x] Renderização dos dados consumidos no dashboard administrativo da plataforma;
 
 ### Próximas etapas
 
-- [ ] Integração do cliente HTTP no sistema principal do Trocabook (Spring Boot);
-- [ ] Renderização dos dados consumidos no dashboard administrativo da plataforma;
-- [ ] Validação dos modelos preditivos com volume real de dados.
+
+- [ ] Validação dos modelos preditivos com volume maior de dados.
 
 ---
 

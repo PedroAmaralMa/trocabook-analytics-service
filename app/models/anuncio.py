@@ -21,4 +21,4 @@ class Anuncio(BaseModel):
     autores: list[str]
     categorias: list[str]
     tipoNegociacao: TipoNegociacao
-    dataCriacao: datetime
+    dataCriacao: datetime | None = None

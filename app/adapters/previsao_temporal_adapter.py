@@ -40,7 +40,17 @@ class PrevisaoTemporalAdapter:
             Instância de PrevisaoTemporalResponse ou None.
         """
         if not resultado_service:
-            return None
+            return PrevisaoTemporalResponse(
+                avaliacao={
+                    "mae": None,
+                    "rmse": None,
+                    "previsoesTeste": []
+                },
+                projecoes=[],
+                resumoHorizontes=[],
+                modelo={"status": "HISTORICO_INSUFICIENTE",
+                        "mensagem": "Histórico de registros insuficiente para calcular projeção preditiva."}
+            )
 
         avaliacao = resultado_service.get("avaliacao", {})
 
