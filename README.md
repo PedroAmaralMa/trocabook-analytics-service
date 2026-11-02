@@ -378,7 +378,7 @@ pytest --cov=app --cov-report=term-missing
 ### 6. Execute a API
 
 ```bash
-python -m uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload --port=8001
 ```
 
 A documentação interativa da API estará disponível em:
